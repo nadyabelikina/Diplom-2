@@ -8,3 +8,4 @@
 /target/test-classes/
 /target/site/
 /.allure/
+/.allure/allure-2.15.0/
