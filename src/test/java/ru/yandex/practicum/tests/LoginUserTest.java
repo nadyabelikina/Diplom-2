@@ -6,6 +6,7 @@ import io.qameta.allure.junit4.DisplayName;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.practicum.practicum.generate.UserDataFactory;
 import ru.practicum.practicum.steps.UserSteps;
 import ru.practicum.practicum.model.User;
 
@@ -26,13 +27,17 @@ public class LoginUserTest extends BaseTest  {
     public void setUp() {
         user = new User();
         userSteps = new UserSteps();
+
+
         user
-                .setEmail("test-data@yandex.ru1123")
-                .setPassword("password")
-                .setName("Username");
+                .setEmail(UserDataFactory.generateEmail())
+                .setPassword(UserDataFactory.generateValidPassword())
+                .setName(UserDataFactory.generateName());
+
         userSteps.createUser(user)
                 .statusCode(200)
                 .body("success", equalTo(true));
+
         String accessTokenWithBearer = UserSteps
                 .login(user)
                 .extract().body().path("accessToken");
@@ -49,6 +54,7 @@ public class LoginUserTest extends BaseTest  {
         UserSteps
                 .login(user)
                 .statusCode(200)
+                .and().body("success", equalTo(true))
                 .and()
                 .body("refreshToken", notNullValue())
                 .extract().body().path("accessToken");
@@ -62,10 +68,13 @@ public class LoginUserTest extends BaseTest  {
     public void loginWithUserFalseEmailTest() {
 
         user
-                .setEmail("test-data781246@yndeax.ru");
+                .setEmail(UserDataFactory.generateEmail());
         UserSteps
                 .login(user)
-                .statusCode(401);
+                .statusCode(401)
+                .body("success", equalTo(false))
+                .and()
+                .body("message", equalTo("email or password are incorrect"));
 
     }
 
@@ -76,10 +85,12 @@ public class LoginUserTest extends BaseTest  {
     public void loginWithUserFalsePasswordTest() {
 
         user
-                .setPassword("passwordqwerty");
+                .setPassword(UserDataFactory.generateInvalidPassword());
         UserSteps
                 .login(user)
-                .statusCode(401);
+                .statusCode(401).body("success", equalTo(false))
+                .and()
+                .body("message", equalTo("email or password are incorrect"));
 
     }
 

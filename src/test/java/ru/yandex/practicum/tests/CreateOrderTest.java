@@ -5,6 +5,7 @@ import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 
+import ru.practicum.practicum.generate.UserDataFactory;
 import ru.practicum.practicum.model.Order;
 import ru.practicum.practicum.model.User;
 import ru.practicum.practicum.steps.UserSteps;
@@ -24,6 +25,7 @@ import static org.hamcrest.CoreMatchers.*;
  * * без ингредиентов,
  * * с неверным хешем ингредиентов.
  */
+
 public class CreateOrderTest extends BaseTest {
     private UserSteps userSteps;
     private OrderSteps orderSteps;
@@ -33,6 +35,11 @@ public class CreateOrderTest extends BaseTest {
     public void setUp() {
         userSteps = new UserSteps();
         orderSteps = new OrderSteps();
+        user = new User();
+        user
+                .setEmail(UserDataFactory.generateEmail())
+                .setPassword(UserDataFactory.generateValidPassword())
+                .setName(UserDataFactory.generateName());
     }
 
     @Test
@@ -49,7 +56,7 @@ public class CreateOrderTest extends BaseTest {
         orderSteps
                 .orderWithoutAuth(order)
                 .assertThat()
-                .statusCode(200);
+                .statusCode(200).body("success", equalTo(true));
     }
 
     @Test
@@ -73,6 +80,7 @@ public class CreateOrderTest extends BaseTest {
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
     public void createOrderWithoutAuthNoIngredient() {
+
         Order order = new Order(null);
         orderSteps
                 .orderWithoutAuth(order)
@@ -89,24 +97,20 @@ public class CreateOrderTest extends BaseTest {
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
     public void createOrderWithAuth() {
-        User user = new User();
-        user
-                //.setEmail(RandomStringUtils.randomAlphabetic(8)+"test-data@qwertyv.ru")
-                .setEmail("test-dat345ved46@qwerty.ru")
-                .setPassword("password")
-                .setName("Username");
+
         userSteps
                 .createUser(user)
                 .statusCode(200)
                 .body("accessToken", startsWith("Bearer "))
                 .body("refreshToken", notNullValue())
                 .body("success", equalTo(true));
+
         String accessTokenWithBearer = UserSteps
                 .login(user)
                 .extract().body().path("accessToken");
         String accessToken = accessTokenWithBearer.replace("Bearer ", "");
         user.setAccessToken(accessToken);
-        //System.out.println(accessToken);
+
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add("61c0c5a71d1f82001bdaaa6d");
         ingredients.add("61c0c5a71d1f82001bdaaa73");
@@ -116,9 +120,8 @@ public class CreateOrderTest extends BaseTest {
         orderSteps
                 .orderWithAuth(accessToken, order)
                 .assertThat()
-                .statusCode(200);
+                .statusCode(200).body("success", equalTo(true));
 
-        userSteps.deleteUser(accessToken);
     }
 
     @Test
@@ -126,18 +129,14 @@ public class CreateOrderTest extends BaseTest {
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
     public void createOrderWithAuthNoIngredient() {
-        User user = new User();
-        user
 
-                .setEmail("test-data4535446@qwerty.ru")
-                .setPassword("password")
-                .setName("Username");
         userSteps
                 .createUser(user)
                 .statusCode(200)
                 .body("accessToken", startsWith("Bearer "))
                 .body("refreshToken", notNullValue())
                 .body("success", equalTo(true));
+
         String accessTokenWithBearer = UserSteps
                 .login(user)
                 .extract().body().path("accessToken");
@@ -146,10 +145,12 @@ public class CreateOrderTest extends BaseTest {
         Order order = new Order(null);
         orderSteps
                 .orderWithAuth(accessToken, order)
+                .statusCode(400)
                 .assertThat()
-                .statusCode(400);
+                .body("success", equalTo(false))
+                .and()
+                .body("message", equalTo("Ingredient ids must be provided"));
 
-        userSteps.deleteUser(accessToken);
     }
 
     @Test
@@ -157,18 +158,14 @@ public class CreateOrderTest extends BaseTest {
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
     public void createOrderWithAuthErrorHash() {
-        User user = new User();
-        user
 
-                .setEmail("test-data1232346@qwerty.ru")
-                .setPassword("password")
-                .setName("Username");
         userSteps
                 .createUser(user)
                 .statusCode(200)
                 .body("accessToken", startsWith("Bearer "))
                 .body("refreshToken", notNullValue())
                 .body("success", equalTo(true));
+
         String accessTokenWithBearer = UserSteps
                 .login(user)
                 .extract().body().path("accessToken");
@@ -185,8 +182,19 @@ public class CreateOrderTest extends BaseTest {
                 .assertThat()
                 .statusCode(500);
 
-        userSteps.deleteUser(accessToken);
     }
 
+    @After
+    public void tearDown() {
+
+       if (!user.getEmail().isEmpty() && !user.getPassword().isEmpty()) {
+
+            if (user.getAccessToken() != null) {
+
+                userSteps.deleteUser(user.getAccessToken());
+            }
+
+        }
+    }
 
 }

@@ -1,35 +1,36 @@
 package ru.practicum.practicum.steps;
 import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
+import ru.practicum.practicum.constants.Endpoints;
 import ru.practicum.practicum.model.User;
 import static io.restassured.RestAssured.given;
 
 public class UserSteps {
-    @Step
+    @Step("Создание пользователя через API")
     public ValidatableResponse createUser(User user) {
         return given()
                 .body(user)
                 .when()
-                .post("/api/auth/register")
+                .post(Endpoints.REGISTER)
                 .then();
     }
 
 
-    @Step
+    @Step("Авторизация пользователя через API")
     public static ValidatableResponse login(User user) {
         return given()
                 .body(user)
                 .when()
-                .post("/api/auth/login")
+                .post(Endpoints.LOGIN)
                 .then();
     }
 
-    @Step
+    @Step("Удаление пользователя через API")
     public ValidatableResponse deleteUser(String accessToken) {
         return given()
                 .auth().oauth2(accessToken)
                 .when()
-                .delete("/api/auth/user")
+                .delete(Endpoints.DELETE_USER)
                 .then();
     }
 }

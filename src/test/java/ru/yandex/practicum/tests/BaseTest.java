@@ -5,16 +5,17 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.config.LogConfig;
 import io.restassured.http.ContentType;
 import org.junit.Before;
-import ru.practicum.practicum.config.RestConfig;
+import ru.practicum.practicum.constants.Endpoints;
 
 public class BaseTest {
 
     @Before
     public void startUp(){
         RestAssured.requestSpecification = new RequestSpecBuilder()
-                .setBaseUri(RestConfig.HOST)
+                .setBaseUri(Endpoints.HOST)
                 .setContentType(ContentType.JSON)
                 .build();
+
         RestAssured.config = RestAssured
                 .config()
                 .logConfig(LogConfig.logConfig().enableLoggingOfRequestAndResponseIfValidationFails());
