@@ -9,3 +9,7 @@
 /target/site/
 /.allure/
 /.allure/allure-2.15.0/
+/.allure/allure-2.15.0/plugins/
+/.allure/allure-2.15.0/plugins/behaviors-plugin/
+/.allure/allure-2.15.0/plugins/packages-plugin/
+/.allure/allure-2.15.0/plugins/screen-diff-plugin/
